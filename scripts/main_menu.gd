@@ -1,6 +1,6 @@
 extends Control
 
-const BATTLE_SCENE := "res://scenes/battlefield.tscn"
+const BATTLE_SCENE := "res://scenes/base_defense.tscn"
 
 func _ready() -> void:
 	_build_menu()
@@ -26,7 +26,7 @@ func _build_menu() -> void:
 	layout.add_child(title)
 
 	var subtitle := Label.new()
-	subtitle.text = "A HISTORICAL TURN-BASED STRATEGY"
+	subtitle.text = "A HISTORICAL STRATEGY • KINGDOM DEFENSE"
 	subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	subtitle.add_theme_font_size_override("font_size", 15)
 	subtitle.add_theme_color_override("font_color", Color("#c3cbd4"))
@@ -37,14 +37,14 @@ func _build_menu() -> void:
 	layout.add_child(spacer)
 
 	var start_button := Button.new()
-	start_button.text = "START BATTLE"
+	start_button.text = "DEFEND KINGDOM"
 	start_button.custom_minimum_size = Vector2(0, 76)
 	start_button.add_theme_font_size_override("font_size", 24)
 	start_button.pressed.connect(_start_battle)
 	layout.add_child(start_button)
 
 	var note := Label.new()
-	note.text = "PROTOTYPE 01  •  KONBAUNG vs HANTHAWADDY"
+	note.text = "PHASE 2  •  KONBAUNG KINGDOM DEFENSE"
 	note.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	note.add_theme_font_size_override("font_size", 13)
 	note.add_theme_color_override("font_color", Color("#aab3bd"))
