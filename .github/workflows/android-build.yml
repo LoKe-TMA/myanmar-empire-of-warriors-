@@ -22,6 +22,7 @@ jobs:
     container:
       image: barichello/godot-ci:4.4.1
     env:
+      HOME: /github/home
       ANDROID_HOME: /usr/lib/android-sdk
       ANDROID_SDK_ROOT: /usr/lib/android-sdk
       GODOT_ANDROID_KEYSTORE_DEBUG_PATH: /github/home/.android/debug.keystore
@@ -43,7 +44,7 @@ jobs:
           fi
           echo "Using SDK manager: $SDKMANAGER"
           yes | "$SDKMANAGER" --sdk_root="$ANDROID_HOME" --licenses
-          "$SDKMANAGER" --sdk_root="$ANDROID_HOME" "platform-tools" "platforms;android-33" "build-tools;33.0.2"
+          "$SDKMANAGER" --sdk_root="$ANDROID_HOME" "platform-tools" "platforms;android-33" "platforms;android-35" "build-tools;33.0.2" "build-tools;35.0.0"
           mkdir -p /github/home/.android
           keytool -genkeypair -v -keystore /github/home/.android/debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
           echo "Installed Android SDK packages:"
@@ -60,8 +61,10 @@ jobs:
           echo "SDK directory checks:"
           test -x "$ANDROID_HOME/platform-tools/adb"
           test -x "$ANDROID_HOME/build-tools/33.0.2/aapt"
+          test -x "$ANDROID_HOME/build-tools/35.0.0/aapt"
           test -d "$ANDROID_HOME/platforms/android-33"
-          ls -la "$ANDROID_HOME/build-tools/33.0.2"
+          test -d "$ANDROID_HOME/platforms/android-35"
+          ls -la "$ANDROID_HOME/build-tools/35.0.0"
 
       - name: Install matching Godot Android export templates
         run: |
