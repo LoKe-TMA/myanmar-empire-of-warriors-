@@ -82,7 +82,12 @@ jobs:
       - name: Export debug APK
         run: |
           mkdir -p build
-          godot --headless --path . --export-debug "Android Debug" build/Myanmar-Empire-of-Warriors-debug.apk
+          set +e
+          EXPORT_LOG="$(godot --headless --verbose --path . --export-debug "Android Debug" build/Myanmar-Empire-of-Warriors-debug.apk 2>&1)"
+          EXPORT_STATUS=$?
+          printf "%s\\n" "$EXPORT_LOG"
+          echo "Export exit code: $EXPORT_STATUS"
+          exit "$EXPORT_STATUS"
 
       - name: Verify APK
         run: test -s build/Myanmar-Empire-of-Warriors-debug.apk
