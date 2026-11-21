@@ -143,7 +143,7 @@ func _draw_hud() -> void:
 	draw_string(ThemeDB.fallback_font, Vector2(30,151), "GOLD %d   WOOD %d   IRON %d   FOOD %d" % [gold,wood,iron,food], HORIZONTAL_ALIGNMENT_LEFT, 650, 18, Color("#e8d59f"))
 	draw_string(ThemeDB.fallback_font, Vector2(30,184), message, HORIZONTAL_ALIGNMENT_LEFT, 660, 13, Color("#d1dbe1"))
 	_draw_button(Rect2(12,1110,132,72),"TOWER 80G",Color("#596b75"))
-	_draw_button(Rect2(154,1110,132,72),"WALL / BARRACKS",Color("#596b75"))
+	_draw_button(Rect2(154,1110,132,72),"WALL / BARR.",Color("#596b75"))
 	_draw_button(Rect2(296,1110,132,72),"RECRUIT",Color("#596b75"))
 	_draw_button(Rect2(438,1110,132,72),"UPGRADE",Color("#596b75"))
 	_draw_button(Rect2(580,1110,128,72),"END WAVE",Color("#963c32"))
@@ -153,7 +153,7 @@ func _draw_hud() -> void:
 	if build_mode != "":
 		draw_string(ThemeDB.fallback_font, Vector2(220,1085), "PLACE " + build_mode.to_upper() + " ON AN EMPTY HEX", HORIZONTAL_ALIGNMENT_CENTER, 420, 13, Color("#ffe0a0"))
 	else:
-		draw_string(ThemeDB.fallback_font, Vector2(240,1085), "DRAG TO SCROLL • SELECT RED UNITS TO MOVE", HORIZONTAL_ALIGNMENT_CENTER, 440, 12, Color("#c5ced5"))
+		draw_string(ThemeDB.fallback_font, Vector2(240,1085), "DRAG MAP • WALL/BARR.: LEFT/RIGHT • BUILD BARRACKS TO RECRUIT", HORIZONTAL_ALIGNMENT_CENTER, 440, 12, Color("#c5ced5"))
 
 func _draw_button(rect: Rect2, label: String, color: Color) -> void:
 	draw_rect(rect, color)
@@ -213,9 +213,9 @@ func _handle_tap(p: Vector2) -> void:
 		queue_redraw()
 		return
 	if p.y>=1100:
-		if p.x<148: build_mode="tower"
-		elif p.x<220: build_mode="wall"
-		elif p.x<290: build_mode="barracks"
+		if p.x<148: build_mode="tower"; selected_building=-1
+		elif p.x<220: build_mode="wall"; selected_building=-1
+		elif p.x<290: build_mode="barracks"; selected_building=-1
 		elif p.x<432: _recruit()
 		elif p.x<575: _upgrade_base()
 		else: _end_wave()
