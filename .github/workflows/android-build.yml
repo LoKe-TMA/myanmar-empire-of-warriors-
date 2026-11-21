@@ -1,0 +1,42 @@
+name: Android APK Build
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "**.gd"
+      - "**.tscn"
+      - "**.tres"
+      - "**.godot"
+      - "project.godot"
+      - "export_presets.cfg"
+      - ".github/workflows/android-build.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  build-android:
+    runs-on: ubuntu-latest
+    container:
+      image: barichello/godot-ci:4.4.1
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Validate project and import assets
+        run: godot --headless --editor --path . --quit
+
+      - name: Export debug APK
+        run: |
+          mkdir -p build
+          godot --headless --path . --export-debug "Android Debug" build/Myanmar-Empire-of-Warriors-debug.apk
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Myanmar-Empire-of-Warriors-debug
+          path: build/Myanmar-Empire-of-Warriors-debug.apk
+          if-no-files-found: error
+          retention-days: 14
