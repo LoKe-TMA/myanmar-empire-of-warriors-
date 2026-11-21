@@ -221,8 +221,8 @@ func _move_enemy_toward(enemy_index: int, target_index: int) -> void:
 	var best_cell := Vector2i(int(current.q), int(current.r))
 	var best_distance := _hex_distance(current, target)
 	for step in candidates:
-		var q := int(current.q) + step.x
-		var r := int(current.r) + step.y
+		var q: int = int(current.q) + step.x
+		var r: int = int(current.r) + step.y
 		if q < 0 or q >= COLS or r < 0 or r >= ROWS or _unit_at(q, r) != -1:
 			continue
 		var d := _hex_distance({"q": q, "r": r}, target)
