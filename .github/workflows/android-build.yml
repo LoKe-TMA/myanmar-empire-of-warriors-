@@ -21,9 +21,42 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: barichello/godot-ci:4.4.1
+    env:
+      ANDROID_HOME: /opt/android-sdk
+      ANDROID_SDK_ROOT: /opt/android-sdk
+      GODOT_ANDROID_KEYSTORE_DEBUG_PATH: /github/home/.android/debug.keystore
+      GODOT_ANDROID_KEYSTORE_DEBUG_USER: androiddebugkey
+      GODOT_ANDROID_KEYSTORE_DEBUG_PASSWORD: android
     steps:
       - name: Checkout source
         uses: actions/checkout@v4
+
+      - name: Install Java and Android SDK
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends openjdk-17-jdk-headless wget unzip
+          export JAVA_HOME="$(dirname "$(dirname "$(readlink -f "$(command -v javac)")")")"
+          echo "JAVA_HOME=$JAVA_HOME" >> "$GITHUB_ENV"
+          mkdir -p "$ANDROID_HOME/cmdline-tools"
+          wget -q https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -O /tmp/android-commandline-tools.zip
+          mkdir -p /tmp/android-cmdline
+          unzip -q /tmp/android-commandline-tools.zip -d /tmp/android-cmdline
+          mkdir -p "$ANDROID_HOME/cmdline-tools/latest"
+          mv /tmp/android-cmdline/cmdline-tools/* "$ANDROID_HOME/cmdline-tools/latest/"
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --sdk_root="$ANDROID_HOME" --licenses
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --sdk_root="$ANDROID_HOME" "platform-tools" "platforms;android-33" "build-tools;33.0.2"
+          mkdir -p /github/home/.android
+          keytool -genkeypair -v -keystore /github/home/.android/debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
+
+      - name: Install matching Godot Android export templates
+        run: |
+          mkdir -p /github/home/.local/share/godot/export_templates/4.4.1.stable
+          wget -q https://github.com/godotengine/godot/releases/download/4.4.1-stable/Godot_v4.4.1-stable_export_templates.tpz -O /tmp/godot-templates.tpz
+          mkdir -p /tmp/godot-templates
+          unzip -q /tmp/godot-templates.tpz -d /tmp/godot-templates
+          cp /tmp/godot-templates/templates/android_debug.apk /github/home/.local/share/godot/export_templates/4.4.1.stable/
+          cp /tmp/godot-templates/templates/android_release.apk /github/home/.local/share/godot/export_templates/4.4.1.stable/
+          ls -lh /github/home/.local/share/godot/export_templates/4.4.1.stable/
 
       - name: Validate project and import assets
         run: godot --headless --editor --path . --quit
@@ -32,6 +65,9 @@ jobs:
         run: |
           mkdir -p build
           godot --headless --path . --export-debug "Android Debug" build/Myanmar-Empire-of-Warriors-debug.apk
+
+      - name: Verify APK
+        run: test -s build/Myanmar-Empire-of-Warriors-debug.apk
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
