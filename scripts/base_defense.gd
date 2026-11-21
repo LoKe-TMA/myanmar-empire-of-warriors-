@@ -15,6 +15,10 @@ var camera_offset := Vector2(-420, 0)
 var units: Array[Dictionary] = []
 var buildings: Array[Dictionary] = []
 var selected_unit := -1
+var selected_building := -1
+var campaign_chapter := 1
+var iron := 60
+var recruit_count := 0
 var turn_number := 1
 var wave_number := 1
 var base_hp := 30
@@ -43,6 +47,10 @@ func _reset_game() -> void:
 	]
 	buildings = []
 	selected_unit = -1
+	selected_building = -1
+	campaign_chapter = 1
+	recruit_count = 0
+	iron = 60
 	turn_number = 1
 	wave_number = 1
 	base_hp = base_max_hp
@@ -131,11 +139,11 @@ func _draw_hud() -> void:
 	draw_string(ThemeDB.fallback_font, Vector2(30,116), "BASE %d/%d" % [base_hp,base_max_hp], HORIZONTAL_ALIGNMENT_LEFT, 150, 18, Color("#ffe0a0"))
 	draw_rect(Rect2(170,100,210,15), Color("#4b555c"))
 	draw_rect(Rect2(170,100,210.0*float(base_hp)/float(base_max_hp),15), Color("#a33e35"))
-	draw_string(ThemeDB.fallback_font, Vector2(405,116), "WAVE %d  TURN %d" % [wave_number,turn_number], HORIZONTAL_ALIGNMENT_LEFT, 270, 17, Color.WHITE)
-	draw_string(ThemeDB.fallback_font, Vector2(30,151), "GOLD %d   WOOD %d   FOOD %d" % [gold,wood,food], HORIZONTAL_ALIGNMENT_LEFT, 650, 18, Color("#e8d59f"))
+	draw_string(ThemeDB.fallback_font, Vector2(405,116), "CH %d  WAVE %d  TURN %d" % [campaign_chapter,wave_number,turn_number], HORIZONTAL_ALIGNMENT_LEFT, 270, 17, Color.WHITE)
+	draw_string(ThemeDB.fallback_font, Vector2(30,151), "GOLD %d   WOOD %d   IRON %d   FOOD %d" % [gold,wood,iron,food], HORIZONTAL_ALIGNMENT_LEFT, 650, 18, Color("#e8d59f"))
 	draw_string(ThemeDB.fallback_font, Vector2(30,184), message, HORIZONTAL_ALIGNMENT_LEFT, 660, 13, Color("#d1dbe1"))
 	_draw_button(Rect2(12,1110,132,72),"TOWER 80G",Color("#596b75"))
-	_draw_button(Rect2(154,1110,132,72),"WALL 35W",Color("#596b75"))
+	_draw_button(Rect2(154,1110,132,72),"WALL / BARRACKS",Color("#596b75"))
 	_draw_button(Rect2(296,1110,132,72),"RECRUIT",Color("#596b75"))
 	_draw_button(Rect2(438,1110,132,72),"UPGRADE",Color("#596b75"))
 	_draw_button(Rect2(580,1110,128,72),"END WAVE",Color("#963c32"))
@@ -206,7 +214,8 @@ func _handle_tap(p: Vector2) -> void:
 		return
 	if p.y>=1100:
 		if p.x<148: build_mode="tower"
-		elif p.x<290: build_mode="wall"
+		elif p.x<220: build_mode="wall"
+		elif p.x<290: build_mode="barracks"
 		elif p.x<432: _recruit()
 		elif p.x<575: _upgrade_base()
 		else: _end_wave()
@@ -218,9 +227,18 @@ func _handle_tap(p: Vector2) -> void:
 	var q:=int(cell.q)
 	var r:=int(cell.r)
 	var ui:=_unit_at(q,r)
+	var bi:=_building_at(q,r)
+	if bi!=-1:
+		selected_building=bi
+		selected_unit=-1
+		build_mode=""
+		message="Selected %s. Tap UPGRADE to improve it." % str(buildings[bi].kind).to_upper()
+		queue_redraw()
+		return
 	if ui!=-1:
 		if units[ui].side=="red":
 			selected_unit=ui
+			selected_building=-1
 			build_mode=""
 			message="Selected "+str(units[ui].kind)+". Tap adjacent empty hex to move."
 		elif selected_unit!=-1 and _hex_distance(units[selected_unit],units[ui])==1:
@@ -280,6 +298,12 @@ func _place_building(q:int,r:int)->void:
 		wood-=35
 		buildings.append({"kind":"wall","q":q,"r":r,"level":1,"hp":8})
 		message="Wall built. Raiders must break through it."
+	elif build_mode=="barracks":
+		if gold<100 or wood<60: message="Barracks needs 100 gold and 60 wood."; return
+		gold-=100
+		wood-=60
+		buildings.append({"kind":"barracks","q":q,"r":r,"level":1,"hp":12})
+		message="Barracks built. Troop recruitment is now available."
 	build_mode=""
 
 func _recruit()->void:
@@ -287,17 +311,53 @@ func _recruit()->void:
 	if gold<60 or food<25:
 		message="Recruitment needs 60 gold and 25 food."
 		return
-	var spots=[Vector2i(6,6),Vector2i(8,6),Vector2i(6,8),Vector2i(8,8),Vector2i(7,6),Vector2i(7,9)]
+	var spots=[Vector2i(6,6),Vector2i(8,6),Vector2i(6,8),Vector2i(8,8),Vector2i(7,6),Vector2i(7,9),Vector2i(5,7),Vector2i(9,7)]
+	var barracks_exists:=false
+	for b in buildings:
+		if b.kind=="barracks": barracks_exists=true
+	if not barracks_exists:
+		message="Build a Barracks first to recruit troops."
+		return
+	var kind:="INF"
+	var hp:=5
+	var damage:=2
+	var cost_gold:=60
+	var cost_food:=25
+	match recruit_count%3:
+		1:
+			kind="CAV"; hp=4; damage=3; cost_gold=90; cost_food=35
+		2:
+			kind="ELE"; hp=9; damage=4; cost_gold=140; cost_food=50
+	if gold<cost_gold or food<cost_food:
+		message="Not enough supplies for %s recruitment."%kind
+		return
 	for p in spots:
 		if _unit_at(p.x,p.y)==-1 and _building_at(p.x,p.y)==-1:
-			gold-=60
-			food-=25
-			units.append({"id":"red_recruit_%d"%turn_number,"side":"red","kind":"INF","q":p.x,"r":p.y,"hp":5,"max_hp":5,"damage":2})
-			message="New infantry recruited."
+			gold-=cost_gold
+			food-=cost_food
+			recruit_count+=1
+			units.append({"id":"red_recruit_%d"%turn_number,"side":"red","kind":kind,"q":p.x,"r":p.y,"hp":hp,"max_hp":hp,"damage":damage})
+			message="New %s recruited from the Barracks."%kind
 			return
 	message="No free recruitment space near the base."
 
 func _upgrade_base()->void:
+	if selected_building!=-1 and selected_building<buildings.size():
+		var b:Dictionary=buildings[selected_building]
+		if int(b.level)>=3:
+			message="This building is already at maximum level."
+			return
+		var cost_g:=70*int(b.level)
+		var cost_i:=20*int(b.level)
+		if gold<cost_g or iron<cost_i:
+			message="Building upgrade needs %d gold and %d iron."%[cost_g,cost_i]
+			return
+		gold-=cost_g; iron-=cost_i
+		b.level=int(b.level)+1
+		b.hp=int(b.hp)+4
+		buildings[selected_building]=b
+		message="%s upgraded to level %d."%[str(b.kind).to_upper(),int(b.level)]
+		return
 	if gold<120 or wood<80:
 		message="Base upgrade needs 120 gold and 80 wood."
 		return
@@ -329,11 +389,16 @@ func _end_wave()->void:
 	wave_number+=1
 	gold+=35+wave_number*3
 	wood+=18
+	iron+=8
 	food+=20
-	_spawn_wave(mini(2+int(wave_number/2),7))
-	if wave_number>10:
+	if wave_number>30:
 		campaign_complete=true
-		message="Chapter 1 secured! The kingdom has survived ten waves."
+		message="Victory! All three campaign chapters have been secured."
+	elif (wave_number-1)%10==0:
+		campaign_chapter+=1
+		base_hp=min(base_max_hp,base_hp+8)
+		message="Chapter %d unlocked! Royal reinforcements and supplies received."%campaign_chapter
+	_spawn_wave(mini(2+int(wave_number/2),7))
 	else:
 		message="Wave %d incoming. Supplies collected: gold, wood and food."%wave_number
 	queue_redraw()
@@ -452,6 +517,9 @@ func _save_game()->void:
 	cfg.set_value("kingdom","gold",gold)
 	cfg.set_value("kingdom","wood",wood)
 	cfg.set_value("kingdom","food",food)
+	cfg.set_value("kingdom","iron",iron)
+	cfg.set_value("kingdom","chapter",campaign_chapter)
+	cfg.set_value("kingdom","recruit_count",recruit_count)
 	var err:=cfg.save(SAVE_PATH)
 	message="Game saved on this device." if err==OK else "Save failed."
 	queue_redraw()
@@ -472,6 +540,9 @@ func _load_game()->void:
 	gold=int(cfg.get_value("kingdom","gold",100))
 	wood=int(cfg.get_value("kingdom","wood",100))
 	food=int(cfg.get_value("kingdom","food",100))
+	iron=int(cfg.get_value("kingdom","iron",60))
+	campaign_chapter=int(cfg.get_value("kingdom","chapter",1))
+	recruit_count=int(cfg.get_value("kingdom","recruit_count",0))
 	game_over=false
 	campaign_complete=false
 	message="Saved kingdom loaded."
