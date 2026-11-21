@@ -1,60 +1,50 @@
-# Myanmar: Empire of Warriors — GDD v0.1
+# Myanmar: Empire of Warriors — GDD v0.2
 
 ## Vision
-Create an accessible mobile-first, turn-based historical strategy game inspired by Myanmar's kingdoms, armies, fortifications, and campaigns.
+A mobile-first historical strategy game about Myanmar kingdoms, armies, fortifications, and campaigns. The game combines tactical unit control with defending a kingdom stronghold.
 
 ## Product target
 - Primary platform: Android
-- Distribution goal: Google Play
 - Engine: Godot 4.x with GDScript
-- Initial language: English UI labels with Myanmar localization planned
-- Business model: undecided; no monetization in the first prototype
+- Development workflow: Android phone + Godot Android Editor
+- Initial UI language: English; Myanmar localization planned
+- Monetization: not included in the prototype
 
 ## Historical scope
-The first playable scenario uses two opposing prototype factions:
-- Red Army: Konbaung-inspired
-- Gold Army: Hanthawaddy-inspired
+The prototype uses fictionalized tutorial factions:
+- Red Army: Konbaung-inspired defenders
+- Gold Army: hostile raiders representing a rival force
+This is not presented as a verified historical battle. Campaign scenarios require historical research.
 
-This is a fictionalized tutorial encounter for testing combat mechanics. It must not be presented as a verified historical battle. Campaign missions will be based on researched events and reviewed for historical accuracy.
+## Phase 1 — Playable tactical prototype
+- Main menu and battle scene
+- Hex selection, movement, and adjacent attacks
+- Basic enemy turn and restart
+- Portrait Android layout
 
-## Core gameplay
-1. The player selects one of their units.
-2. A unit may move to a legal adjacent hex or attack an adjacent enemy.
-3. The player ends the turn.
-4. Enemy AI moves or attacks.
-5. Victory occurs when all enemy units are defeated; defeat occurs when all player units are defeated.
+## Phase 2 — Kingdom Base Defense prototype
+- 15×15 hex wilderness map, larger than the original 7×7 test board
+- Touch-drag map scrolling
+- A central royal base with 20 HP
+- Three player defenders: infantry, cavalry, and war elephant
+- Hostile units spawn at random legal wilderness cells, not from a fixed road
+- End Wave advances hostile movement toward the base and creates the next wave
+- Player can select, reposition, and use adjacent attacks
+- Base reaching zero HP ends the defense attempt
 
-## Prototype unit classes
-| Unit | Role | Design intent |
-|---|---|---|
-| Infantry | Balanced | Reliable basic unit |
-| Cavalry | Mobile | Higher movement potential in later iterations |
-| War elephant | Heavy | High health and strong close combat |
+## Current prototype controls
+1. Tap a RED defender to select it.
+2. Tap an adjacent empty hex to reposition it.
+3. Tap an adjacent GOLD raider to attack it.
+4. Drag the battlefield to scroll the large map.
+5. Tap END WAVE to let raiders advance and spawn the next wave.
+6. Tap RESTART to reset the defense.
 
-Initial prototype stats are placeholders and will be tuned through playtesting.
+## Roadmap
+- Phase 3: fortification placement, archer towers, walls, defensive upgrades
+- Phase 4: original character sprites, terrain art, sound, animation, tutorial, save data
+- Phase 5: campaign progression, generals, researched historical missions, localization
+- Phase 6: device optimization, accessibility, Android packaging, store preparation
 
-## Battlefield
-- Hex-based tactical board
-- Prototype terrain: plain, forest, hill, river
-- Later terrain rules: movement costs, defensive bonuses, blocked cells, and line of sight
-
-## Phase 1 acceptance criteria
-- Project opens in Godot 4.x without parse errors.
-- Main menu opens the battle scene.
-- Player can select, move, and attack with units.
-- Enemy AI takes a turn.
-- Victory and defeat states are displayed.
-- UI is readable on a portrait Android screen.
-- A debug APK can be exported and installed on the user's Android device.
-
-## Later roadmap
-- Phase 2: art direction, unit sprites, sound, tutorial, save data
-- Phase 3: campaign map, generals, upgrades, historical missions
-- Phase 4: device testing, performance, accessibility, localization
-- Phase 5: Play Console setup, closed testing, store listing, AAB release
-
-## Risks and safeguards
-- Verify historical details before presenting them as facts.
-- Use original or properly licensed artwork, music, fonts, and sound.
-- Do not copy proprietary assets or UI from Grand War: Rome; use it only as a genre reference.
-- Keep Android signing keystores and credentials out of version control.
+## Asset and historical safeguards
+Use original or properly licensed artwork, audio, and fonts. Do not copy proprietary game assets or UI. Distinguish researched history from fictionalized gameplay.
